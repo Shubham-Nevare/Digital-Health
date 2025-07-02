@@ -1,0 +1,25 @@
+export const medicalRecords = [{
+        id: 1,
+        name: 'Blood Test Results',
+        type: 'pdf',
+        date: '2024-03-15',
+        size: '2.5 MB',
+        url: '/dummy.pdf',
+    },
+    {
+        id: 2,
+        name: 'X-Ray Scan',
+        type: 'image',
+        date: '2024-03-10',
+        size: '1.8 MB',
+        url: 'https://images.unsplash.com/photo-1576091160550-2173dba999ef?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80',
+    },
+    {
+        id: 3,
+        name: 'MRI Report',
+        type: 'pdf',
+        date: '2024-03-05',
+        size: '4.2 MB',
+        url: '/dummy.pdf',
+    },
+];

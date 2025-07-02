@@ -1,0 +1,36 @@
+export const appointments = [{
+        id: 1,
+        name: "Sarah Johnson",
+        time: "09:30 AM",
+        type: "Checkup",
+        completed: false,
+    },
+    {
+        id: 2,
+        name: "Michael Chen",
+        time: "09:45 AM",
+        type: "Consultation",
+        completed: false,
+    },
+    {
+        id: 3,
+        name: "Emma Williams",
+        time: "10:00 AM",
+        type: "Follow-up",
+        completed: false,
+    },
+    {
+        id: 4,
+        name: "David Kim",
+        time: "10:15 AM",
+        type: "Chronic care",
+        completed: true,
+    },
+    {
+        id: 5,
+        name: "Lisa Rodriguez",
+        time: "10:30 AM",
+        type: "Physical",
+        completed: false,
+    },
+];
