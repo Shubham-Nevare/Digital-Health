@@ -187,12 +187,12 @@ npm run lint
 
 ## Deployment
 
-### Frontend (Vercel/Netlify)
+### Frontend (Vercel)
 1. Connect your repository
 2. Set environment variables
 3. Deploy
 
-### Backend (Heroku/Railway)
+### Backend (Render)
 1. Set environment variables
 2. Configure MongoDB connection
 3. Deploy
