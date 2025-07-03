@@ -64,7 +64,7 @@ function SessionTimer() {
 
     useEffect(() => {
       if (timeLeft != null && timeLeft > 0) {
-        console.log('Session expires in:', formatTime(timeLeft));
+        // console.log('Session expires in:', formatTime(timeLeft));
       }
     }, [timeLeft]);
   

@@ -19,6 +19,7 @@ const connectDB = require('./config/database');
 const authRoutes = require('./routes/auth');
 const appointmentRoutes = require('./routes/appointments');
 const faqRoutes = require('./routes/faq');
+const doctorRoutes = require('./routes/doctors');
 // const doctorRoutes = require('./routes/doctors');
 
 // Initialize express
@@ -65,6 +66,7 @@ app.use('/uploads', express.static(path.join(__dirname, 'public/uploads')));
 app.use('/api/auth', authRoutes);
 app.use('/api/appointments', appointmentRoutes);
 app.use('/api/faqs', faqRoutes);
+app.use('/api/doctors', doctorRoutes);
 // app.use('/api/doctors', doctorRoutes);
 
 // Health check endpoint

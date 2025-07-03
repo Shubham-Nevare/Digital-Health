@@ -2,20 +2,161 @@
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { gsap } from "gsap";
+import { ScrollTrigger } from "gsap/ScrollTrigger";
+
+// Register ScrollTrigger plugin
+gsap.registerPlugin(ScrollTrigger);
 
 export default function Home() {
   const headingRef = useRef(null);
   const [faqs, setFaqs] = useState([]);
   const [activeIndex, setActiveIndex] = useState(null);
 
+  // Refs for animations
+  const heroContentRef = useRef(null);
+  const heroImageRef = useRef(null);
+  const featuresRef = useRef([]);
+  const howItWorksRef = useRef([]);
+  const specialtiesRef = useRef([]);
+  const testimonialsRef = useRef([]);
+  const faqRef = useRef(null);
+  const ctaRef = useRef(null);
+  const faqImageRef = useRef(null);
+  const faqItemsRef = useRef([]);
+
   useEffect(() => {
-    if (headingRef.current) {
+    // Hero section animations
       gsap.fromTo(
         headingRef.current,
         { y: 50, opacity: 0 },
         { y: 0, opacity: 1, duration: 1, ease: "power3.out" }
       );
-    }
+
+    gsap.fromTo(
+      heroContentRef.current.children,
+      { y: 30, opacity: 0 },
+      {
+        y: 0,
+        opacity: 1,
+        duration: 0.8,
+        stagger: 0.15,
+        ease: "power2.out",
+        delay: 0.3,
+      }
+    );
+
+    gsap.fromTo(
+      heroImageRef.current,
+      { scale: 0.9, opacity: 0 },
+      { scale: 1, opacity: 1, duration: 1, ease: "back.out(1.7)", delay: 0.5 }
+    );
+
+    // Features section animation
+    featuresRef.current.forEach((el, i) => {
+      gsap.fromTo(
+        el,
+        { y: 50, opacity: 0 },
+        {
+          y: 0,
+          opacity: 1,
+          duration: 0.8,
+          delay: i * 0.1,
+          scrollTrigger: {
+            trigger: el,
+            start: "top 80%",
+            toggleActions: "play none none none",
+          },
+        }
+      );
+    });
+
+    // How It Works section animation
+    howItWorksRef.current.forEach((el, i) => {
+      gsap.fromTo(
+        el,
+        { y: 50, opacity: 0 },
+        {
+          y: 0,
+          opacity: 1,
+          duration: 0.8,
+          delay: i * 0.1,
+          scrollTrigger: {
+            trigger: el,
+            start: "top 80%",
+            toggleActions: "play none none none",
+          },
+        }
+      );
+    });
+
+    // Specialties section animation
+    gsap.fromTo(
+      specialtiesRef.current,
+      { y: 50, opacity: 0 },
+      {
+        y: 0,
+        opacity: 1,
+        duration: 0.8,
+        scrollTrigger: {
+          trigger: specialtiesRef.current,
+          start: "top 80%",
+          toggleActions: "play none none none",
+        },
+      }
+    );
+
+    // Testimonials section animation
+    testimonialsRef.current.forEach((el, i) => {
+      gsap.fromTo(
+        el,
+        { y: 50, opacity: 0 },
+        {
+          y: 0,
+          opacity: 1,
+          duration: 0.8,
+          delay: i * 0.15,
+          scrollTrigger: {
+            trigger: el,
+            start: "top 80%",
+            toggleActions: "play none none none",
+          },
+        }
+      );
+    });
+
+    // FAQ section animation
+    gsap.fromTo(
+      faqRef.current,
+      { y: 50, opacity: 0 },
+      {
+        y: 0,
+        opacity: 1,
+        duration: 0.8,
+        scrollTrigger: {
+          trigger: faqRef.current,
+          start: "top 80%",
+          toggleActions: "play none none none",
+        },
+      }
+    );
+
+    // CTA section animation
+    gsap.fromTo(
+      ctaRef.current,
+      { y: 50, opacity: 0 },
+      {
+        y: 0,
+        opacity: 1,
+        duration: 0.8,
+        scrollTrigger: {
+          trigger: ctaRef.current,
+          start: "top 80%",
+          toggleActions: "play none none none",
+        },
+      }
+    );
+
+    // Fetch FAQs
     const fetchFaqs = async () => {
       try {
         const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/faqs`);
@@ -26,10 +167,45 @@ export default function Home() {
       }
     };
     fetchFaqs();
+
+    // Clean up ScrollTrigger instances
+    return () => {
+      ScrollTrigger.getAll().forEach((instance) => instance.kill());
+    };
   }, []);
 
   const toggleFAQ = (index) => {
-    setActiveIndex(index === activeIndex ? null : index);
+    if (activeIndex === index) {
+      // Closing animation
+      gsap.to(document.querySelector(`#faq-answer-${index}`), {
+        height: 0,
+        opacity: 0,
+        duration: 0.3,
+        ease: "power1.inOut",
+        onComplete: () => setActiveIndex(null),
+      });
+    } else {
+      // Opening animation
+      setActiveIndex(index);
+      const answerEl = document.querySelector(`#faq-answer-${index}`);
+      gsap.fromTo(
+        answerEl,
+        { height: 0, opacity: 0 },
+        {
+          height: "auto",
+          opacity: 1,
+          duration: 0.3,
+          ease: "power1.inOut",
+        }
+      );
+    }
+  };
+
+  // Helper function to add refs to arrays
+  const addToRefs = (el, refArray) => {
+    if (el && !refArray.current.includes(el)) {
+      refArray.current.push(el);
+    }
   };
 
   return (
@@ -45,12 +221,16 @@ export default function Home() {
         <div className="container mx-auto px-4 py-16 md:py-20">
           <div className="flex flex-col lg:flex-row items-center gap-6 lg:gap-8">
             {/* Content */}
-            <div className="lg:w-1/2 z-10 text-center lg:text-left">
+            <div
+              className="lg:w-1/2 z-10 text-center lg:text-left"
+              ref={heroContentRef}
+            >
               <h1
                 ref={headingRef}
                 className="text-3xl sm:text-4xl md:text-5xl font-bold mb-4 leading-snug"
               >
-                Get Expert <span className="text-blue-300">Medical</span> Second Opinions
+                Get Expert <span className="text-blue-300">Medical</span> Second
+                Opinions
               </h1>
               <p className="text-base sm:text-lg md:text-xl mb-6 text-blue-100 max-w-lg mx-auto lg:mx-0">
                 Connect with top specialists for comprehensive medical advice
@@ -121,7 +301,7 @@ export default function Home() {
             </div>
 
             {/* Image */}
-            <div className="lg:w-1/2 z-10 mt-8 lg:mt-0">
+            <div className="lg:w-1/2 z-10 mt-8 lg:mt-0" ref={heroImageRef}>
               <div className="relative w-full h-[250px] sm:h-[320px] rounded-xl overflow-hidden shadow-lg border-2 border-blue-300/20">
                 <img
                   src="https://plus.unsplash.com/premium_photo-1681843126728-04eab730febe?q=80&w=2070&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"
@@ -156,31 +336,38 @@ export default function Home() {
             Why Choose HealthConnectDoctor?
           </h2>
           <div className="grid md:grid-cols-3 gap-8">
-            <div className="bg-gray-900 p-6 rounded-lg shadow-md">
-              <div className="text-blue-400 text-4xl mb-4">🔒</div>
-              <h3 className="text-xl font-semibold mb-2">
-                Secure Medical Records
-              </h3>
-              <p className="text-gray-400">
-                Share your medical history securely with our encrypted platform.
-              </p>
+            {[
+              {
+                icon: "🔒",
+                title: "Secure Medical Records",
+                description:
+                  "Share your medical history securely with our encrypted platform.",
+              },
+              {
+                icon: "👨‍⚕️",
+                title: "Expert Doctors",
+                description:
+                  "Connect with verified specialists from around the world.",
+              },
+              {
+                icon: "💬",
+                title: "Video Consultations",
+                description:
+                  "Get face-to-face consultations from the comfort of your home.",
+              },
+            ].map((feature, index) => (
+              <div
+                key={index}
+                ref={(el) => addToRefs(el, featuresRef)}
+                className="bg-gray-900 p-6 rounded-lg shadow-md"
+              >
+                <div className="text-blue-400 text-4xl mb-4">
+                  {feature.icon}
             </div>
-            <div className="bg-gray-900 p-6 rounded-lg shadow-md">
-              <div className="text-blue-400 text-4xl mb-4">👨‍⚕️</div>
-              <h3 className="text-xl font-semibold mb-2">Expert Doctors</h3>
-              <p className="text-gray-400">
-                Connect with verified specialists from around the world.
-              </p>
+                <h3 className="text-xl font-semibold mb-2">{feature.title}</h3>
+                <p className="text-gray-400">{feature.description}</p>
             </div>
-            <div className="bg-gray-900 p-6 rounded-lg shadow-md">
-              <div className="text-blue-400 text-4xl mb-4">💬</div>
-              <h3 className="text-xl font-semibold mb-2">
-                Video Consultations
-              </h3>
-              <p className="text-gray-400">
-                Get face-to-face consultations from the comfort of your home.
-              </p>
-            </div>
+            ))}
           </div>
         </div>
       </section>
@@ -192,45 +379,49 @@ export default function Home() {
             How It Works
           </h2>
           <div className="grid md:grid-cols-4 gap-8">
-            <div className="text-center">
+            {[
+              {
+                step: "1",
+                title: "Create Profile",
+                description: "Sign up and complete your medical profile",
+              },
+              {
+                step: "2",
+                title: "Find Doctor",
+                description: "Browse and select from our expert doctors",
+              },
+              {
+                step: "3",
+                title: "Book Consultation",
+                description: "Schedule a video consultation",
+              },
+              {
+                step: "4",
+                title: "Get Second Opinion",
+                description: "Receive expert medical advice",
+              },
+            ].map((step, index) => (
+              <div
+                key={index}
+                ref={(el) => addToRefs(el, howItWorksRef)}
+                className="text-center"
+              >
               <div className="bg-blue-950 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
-                <span className="text-2xl font-bold text-blue-400">1</span>
+                  <span className="text-2xl font-bold text-blue-400">
+                    {step.step}
+                  </span>
               </div>
-              <h3 className="font-semibold mb-2">Create Profile</h3>
-              <p className="text-gray-400">
-                Sign up and complete your medical profile
-              </p>
-            </div>
-            <div className="text-center">
-              <div className="bg-blue-950 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
-                <span className="text-2xl font-bold text-blue-400">2</span>
+                <h3 className="font-semibold mb-2">{step.title}</h3>
+                <p className="text-gray-400">{step.description}</p>
               </div>
-              <h3 className="font-semibold mb-2">Find Doctor</h3>
-              <p className="text-gray-400">
-                Browse and select from our expert doctors
-              </p>
-            </div>
-            <div className="text-center">
-              <div className="bg-blue-950 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
-                <span className="text-2xl font-bold text-blue-400">3</span>
-              </div>
-              <h3 className="font-semibold mb-2">Book Consultation</h3>
-              <p className="text-gray-400">Schedule a video consultation</p>
-            </div>
-            <div className="text-center">
-              <div className="bg-blue-950 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
-                <span className="text-2xl font-bold text-blue-400">4</span>
-              </div>
-              <h3 className="font-semibold mb-2">Get Second Opinion</h3>
-              <p className="text-gray-400">Receive expert medical advice</p>
-            </div>
+            ))}
           </div>
         </div>
       </section>
 
       {/* Specialties Section */}
       <section className="py-20 bg-gray-950">
-        <div className="container mx-auto px-6">
+        <div className="container mx-auto px-6" ref={specialtiesRef}>
           <h2 className="text-3xl font-bold text-center mb-12 text-blue-400">
             Our Medical Specialties
           </h2>
@@ -264,15 +455,39 @@ export default function Home() {
             What Our Patients Say
           </h2>
           <div className="grid md:grid-cols-3 gap-8">
-            <div className="bg-gray-800 p-6 rounded-lg shadow-md">
+            {[
+              {
+                name: "Sarah Johnson",
+                image: "https://randomuser.me/api/portraits/women/32.jpg",
+                quote:
+                  "The second opinion I received gave me peace of mind about my treatment options. The doctor was incredibly thorough.",
+              },
+              {
+                name: "Michael Chen",
+                image: "https://randomuser.me/api/portraits/men/45.jpg",
+                quote:
+                  "Saved me hours of waiting at the clinic. The video consultation was just as effective as an in-person visit.",
+              },
+              {
+                name: "Emily Rodriguez",
+                image: "https://randomuser.me/api/portraits/women/68.jpg",
+                quote:
+                  "The specialist provided a different perspective that my local doctor hadn't considered. Very valuable service!",
+              },
+            ].map((testimonial, index) => (
+              <div
+                key={index}
+                ref={(el) => addToRefs(el, testimonialsRef)}
+                className="bg-gray-800 p-6 rounded-lg shadow-md"
+              >
               <div className="flex items-center mb-4">
                 <img
-                  src="https://randomuser.me/api/portraits/women/32.jpg"
+                    src={testimonial.image}
                   alt="Patient"
                   className="w-12 h-12 rounded-full mr-4"
                 />
                 <div>
-                  <h4 className="font-semibold">Sarah Johnson</h4>
+                    <h4 className="font-semibold">{testimonial.name}</h4>
                   <div className="flex text-yellow-400">
                     {[...Array(5)].map((_, i) => (
                       <svg
@@ -287,115 +502,138 @@ export default function Home() {
                   </div>
                 </div>
               </div>
-              <p className="text-gray-400 italic">
-                "The second opinion I received gave me peace of mind about my
-                treatment options. The doctor was incredibly thorough."
-              </p>
-            </div>
-            <div className="bg-gray-800 p-6 rounded-lg shadow-md">
-              <div className="flex items-center mb-4">
-                <img
-                  src="https://randomuser.me/api/portraits/men/45.jpg"
-                  alt="Patient"
-                  className="w-12 h-12 rounded-full mr-4"
-                />
-                <div>
-                  <h4 className="font-semibold">Michael Chen</h4>
-                  <div className="flex text-yellow-400">
-                    {[...Array(5)].map((_, i) => (
-                      <svg
-                        key={i}
-                        className="w-4 h-4"
-                        viewBox="0 0 20 20"
-                        fill="currentColor"
-                      >
-                        <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-                      </svg>
-                    ))}
-                  </div>
-                </div>
+                <p className="text-gray-400 italic">"{testimonial.quote}"</p>
               </div>
-              <p className="text-gray-400 italic">
-                "Saved me hours of waiting at the clinic. The video consultation
-                was just as effective as an in-person visit."
-              </p>
-            </div>
-            <div className="bg-gray-800 p-6 rounded-lg shadow-md">
-              <div className="flex items-center mb-4">
-                <img
-                  src="https://randomuser.me/api/portraits/women/68.jpg"
-                  alt="Patient"
-                  className="w-12 h-12 rounded-full mr-4"
-                />
-                <div>
-                  <h4 className="font-semibold">Emily Rodriguez</h4>
-                  <div className="flex text-yellow-400">
-                    {[...Array(5)].map((_, i) => (
-                      <svg
-                        key={i}
-                        className="w-4 h-4"
-                        viewBox="0 0 20 20"
-                        fill="currentColor"
-                      >
-                        <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-                      </svg>
-                    ))}
-                  </div>
-                </div>
-              </div>
-              <p className="text-gray-400 italic">
-                "The specialist provided a different perspective that my local
-                doctor hadn't considered. Very valuable service!"
-              </p>
-            </div>
+            ))}
           </div>
         </div>
       </section>
 
       {/* FAQ Section */}
       <section className="py-20 bg-gray-950">
-      <div className="container mx-auto px-6 max-w-4xl">
-        <h2 className="text-3xl font-bold text-center mb-12 text-blue-400">
-          Frequently Asked Questions
-        </h2>
-        <div className="space-y-4">
-          {faqs.map((faq, index) => (
-            <div
-              key={index}
-              className="bg-gray-800 rounded-lg overflow-hidden"
-            >
-              <button
-                onClick={() => toggleFAQ(index)}
-                className="w-full p-4 text-left flex justify-between items-center hover:bg-gray-700 transition-colors"
+        <div className="container mx-auto px-6">
+          <h2 className="text-3xl font-bold text-center mb-12 text-blue-400">
+            Frequently Asked Questions
+          </h2>
+
+          <div className="flex flex-col lg:flex-row gap-12 items-center">
+            {/* Image on left - only show on larger screens */}
+            <div className=" lg:w-1/2">
+              <div
+                className="relative h-96 w-full rounded-xl overflow-hidden border-2 border-blue-400/20 shadow-lg"
+                ref={(el) => {
+                  if (el && !faqImageRef.current) {
+                    faqImageRef.current = el;
+                    gsap.fromTo(
+                      el,
+                      { x: -100, opacity: 0 },
+                      {
+                        x: 0,
+                        opacity: 1,
+                        duration: 0.8,
+                        scrollTrigger: {
+                          trigger: el,
+                          start: "top 80%",
+                          toggleActions: "play none none none",
+                        },
+                      }
+                    );
+                  }
+                }}
               >
-                <span className="font-medium">{faq.question}</span>
-                <svg
-                  className={`w-5 h-5 text-blue-400 transform transition-transform ${
-                    activeIndex === index ? "rotate-180" : ""
-                  }`}
-                  viewBox="0 0 20 20"
-                  fill="currentColor"
-                >
-                  <path
-                    fillRule="evenodd"
-                    d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"
-                    clipRule="evenodd"
-                  />
-                </svg>
-              </button>
-              {activeIndex === index && (
-                <div className="px-4 pb-4 pt-2 text-gray-400">
-                  {faq.answer}
+                <img
+                  src="https://images.unsplash.com/photo-1579684385127-1ef15d508118?q=80&w=2070&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"
+                  alt="Doctor with patient"
+                  className="w-full h-full object-cover"
+                  loading="lazy"
+                />
+                <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent p-6">
+                  <h3 className="text-white text-xl font-semibold">
+                    Have Questions?
+                  </h3>
+                  <p className="text-blue-200">We're here to help you 24/7</p>
                 </div>
-              )}
+              </div>
             </div>
-          ))}
+
+            {/* FAQ Content on right */}
+            <div className="w-full lg:w-1/2" ref={faqRef}>
+              <div className="space-y-4">
+                {faqs.length > 0 ? (
+                  faqs.map((faq, index) => (
+              <div
+                key={index}
+                className="bg-gray-800 rounded-lg overflow-hidden"
+                      ref={(el) => {
+                        if (el && !faqItemsRef.current.includes(el)) {
+                          faqItemsRef.current.push(el);
+                          gsap.fromTo(
+                            el,
+                            { y: 30, opacity: 0 },
+                            {
+                              y: 0,
+                              opacity: 1,
+                              duration: 0.5,
+                              delay: index * 0.1,
+                              scrollTrigger: {
+                                trigger: el,
+                                start: "top 90%",
+                                toggleActions: "play none none none",
+                              },
+                            }
+                          );
+                        }
+                      }}
+                    >
+                      <button
+                        onClick={() => toggleFAQ(index)}
+                        className="w-full p-4 text-left flex justify-between items-center hover:bg-gray-700 transition-colors"
+                      >
+                  <span className="font-medium">{faq.question}</span>
+                  <svg
+                          className={`w-5 h-5 text-blue-400 transform transition-transform ${
+                            activeIndex === index ? "rotate-180" : ""
+                          }`}
+                    viewBox="0 0 20 20"
+                    fill="currentColor"
+                  >
+                    <path
+                      fillRule="evenodd"
+                      d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"
+                      clipRule="evenodd"
+                    />
+                  </svg>
+                </button>
+                      <div
+                        id={`faq-answer-${index}`}
+                        className="overflow-hidden"
+                        style={{
+                          height: activeIndex === index ? "auto" : "0",
+                          opacity: activeIndex === index ? 1 : 0,
+                        }}
+                      >
+                        <div className="px-4 pb-4 pt-2 text-gray-400">
+                          {faq.answer}
+                        </div>
+                      </div>
+                    </div>
+                  ))
+                ) : (
+                  <div className="text-center text-gray-400">
+                    Loading FAQs...
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
         </div>
-      </div>
-    </section>
+      </section>
 
       {/* Final CTA Section */}
-      <section className="py-16 bg-gradient-to-r from-blue-900 to-blue-700">
+      <section
+        className="py-16 bg-gradient-to-r from-blue-900 to-blue-700"
+        ref={ctaRef}
+      >
         <div className="container mx-auto px-6 text-center">
           <h2 className="text-3xl font-bold mb-6">
             Ready for a Second Opinion?
@@ -406,7 +644,7 @@ export default function Home() {
           </p>
           <Link
             href="/find-doctor"
-            className="bg-white text-blue-900 hover:bg-blue-100 px-8 py-3 rounded-full font-bold text-lg inline-block transition-colors shadow-lg hover:shadow-xl"
+            className="bg-white text-blue-900 hover:bg-blue-100 px-8 py-3 rounded-full font-bold text-lg inline-block transition-all duration-300 hover:scale-105 shadow-lg hover:shadow-xl"
           >
             Find Your Doctor Now
           </Link>

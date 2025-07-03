@@ -9,6 +9,7 @@ const {
     rateAppointment,
     getDoctorSchedule,
     exportAppointments,
+    rateDoctorForAppointment,
 } = require('../controllers/appointmentController');
 const { protect, authorize } = require('../middleware/auth');
 
@@ -49,6 +50,7 @@ router.get('/:id', getAppointmentById);
 router.put('/:id/status', authorize('doctor', 'admin'), updateStatusValidation, updateAppointmentStatus);
 router.put('/:id/cancel', cancelAppointment);
 router.post('/:id/rate', rateAppointmentValidation, rateAppointment);
+router.post('/:id/doctor-rate', rateDoctorForAppointment);
 
 // router.get('/export', authorize('admin'), exportAppointments);
 

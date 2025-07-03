@@ -104,6 +104,14 @@ const userSchema = new mongoose.Schema({
         type: Number,
         default: 0
     },
+    ratings: [{
+        user: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
+        // patientName: { type: mongoose.Schema.Types.name, ref: 'User' },
+        appointment: { type: mongoose.Schema.Types.ObjectId, ref: 'Appointment' },
+        rating: { type: Number, min: 1, max: 5 },
+        review: { type: String },
+        date: { type: Date, default: Date.now }
+    }],
     availability: String,
     consultationFee: {
         type: Number,

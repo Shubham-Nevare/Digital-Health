@@ -4,6 +4,8 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import React from "react";
+import { toast } from 'react-hot-toast';
+import Cookies from 'js-cookie';
 
 export default function DoctorProfile({ params }) {
   const router = useRouter();
@@ -12,6 +14,9 @@ export default function DoctorProfile({ params }) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [activeTab, setActiveTab] = useState("about");
+  const [rating, setRating] = useState(0);
+  const [review, setReview] = useState("");
+  const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
     async function fetchDoctor() {
@@ -30,6 +35,35 @@ export default function DoctorProfile({ params }) {
     }
     if (unwrappedParams.id) fetchDoctor();
   }, [unwrappedParams.id]);
+
+  const submitDoctorRating = async () => {
+    setSubmitting(true);
+    try {
+      const token = Cookies.get("token");
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/doctors/${doctor._id}/rate`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ rating, review }),
+      });
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.message || "Failed to submit rating");
+      toast.success("Doctor rated successfully!");
+      setRating(0);
+      setReview("");
+      // Refetch doctor data to update rating
+      if (unwrappedParams.id) {
+        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/auth/doctors/${unwrappedParams.id}`);
+        if (res.ok) setDoctor(await res.json());
+      }
+    } catch (error) {
+      toast.error(error.message || "Failed to submit rating");
+    } finally {
+      setSubmitting(false);
+    }
+  };
 
   if (loading) {
     return <div className="text-center py-12 text-gray-400">Loading doctor profile...</div>;
@@ -70,9 +104,44 @@ export default function DoctorProfile({ params }) {
                 </div>
                 <span className="mx-4 text-gray-600">|</span>
                 <span className="text-gray-400">
-                  {doctor.experience} experience
+                  {doctor.experience} year's experience
                 </span>
               </div>
+
+              {/* Doctor Rating UI */}
+              {/* <div className="mb-6 bg-gray-900 p-4 rounded-lg">
+                <h3 className="text-lg font-semibold text-blue-400 mb-2">Rate this Doctor</h3>
+                <div className="flex items-center gap-1 mb-3">
+                  {[1, 2, 3, 4, 5].map((star) => (
+                    <button
+                      key={star}
+                      onClick={() => setRating(star)}
+                      className="text-2xl focus:outline-none"
+                      type="button"
+                    >
+                      <span className={rating >= star ? "text-yellow-400" : "text-gray-500"}>★</span>
+                    </button>
+                  ))}
+                </div>
+                <textarea
+                  placeholder="Share your experience (optional)"
+                  value={review}
+                  onChange={(e) => setReview(e.target.value)}
+                  className="w-full bg-gray-800 border border-gray-700 rounded-md p-2 text-sm text-gray-300 focus:ring-1 focus:ring-blue-500 focus:border-blue-500 mb-2"
+                  rows="3"
+                />
+                <button
+                  onClick={submitDoctorRating}
+                  disabled={submitting || !rating}
+                  className={`mt-2 px-4 py-2 rounded-md text-sm font-medium ${
+                    rating
+                      ? "bg-blue-600 hover:bg-blue-700 text-white"
+                      : "bg-gray-700 text-gray-400 cursor-not-allowed"
+                  } transition-colors`}
+                >
+                  {submitting ? "Submitting..." : "Submit Rating"}
+                </button>
+              </div> */}
 
               <div className="space-y-2 mb-6">
                 <p className="text-gray-300">

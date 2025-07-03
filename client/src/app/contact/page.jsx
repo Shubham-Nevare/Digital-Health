@@ -53,8 +53,8 @@ export default function Contact() {
                 <h3 className="text-lg font-semibold mb-2 text-gray-300">Address</h3>
                 <p className="text-gray-400">
                   123 Medical Center Drive<br />
-                  Healthcare City, HC 12345<br />
-                  United States
+                  Healthcare City, Mira Road<br />
+                  Mumbai MH India
                 </p>
               </div>
 
@@ -62,8 +62,8 @@ export default function Contact() {
                 <h3 className="text-lg font-semibold mb-2 text-gray-300">Contact Information</h3>
                 <p className="text-gray-400">
                   Email: support@healthconnectdoctor.com<br />
-                  Phone: +1 (555) 123-4567<br />
-                  Fax: +1 (555) 123-4568
+                  Phone: +91 0123456789<br />
+                  Fax: +91 0987654321
                 </p>
               </div>
 

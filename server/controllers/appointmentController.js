@@ -312,6 +312,56 @@ const getDoctorSchedule = async(req, res) => {
     }
 };
 
+// @desc    Rate doctor for an appointment
+// @route   POST /api/appointments/:id/doctor-rate
+// @access  Private
+const rateDoctorForAppointment = async(req, res) => {
+    try {
+        const { rating, review } = req.body;
+        if (rating < 1 || rating > 5) {
+            return res.status(400).json({ message: 'Rating must be between 1 and 5' });
+        }
+        const appointment = await Appointment.findById(req.params.id);
+        if (!appointment) {
+            return res.status(404).json({ message: 'Appointment not found' });
+        }
+        // Check if user is the patient of this appointment
+        if (appointment.patient.toString() !== req.user._id.toString()) {
+            return res.status(403).json({ message: 'Not authorized' });
+        }
+        // Check if appointment is completed
+        if (appointment.status !== 'completed') {
+            return res.status(400).json({ message: 'Can only rate completed appointments' });
+        }
+        // Prevent duplicate doctor rating for this appointment
+        if (appointment.doctorRating) {
+            return res.status(400).json({ message: 'Doctor already rated for this appointment' });
+        }
+        appointment.doctorRating = rating;
+        appointment.doctorReview = review;
+        await appointment.save();
+        // Also add to doctor's ratings array with appointment ID, only if not already present
+        const doctor = await User.findById(appointment.doctor);
+        if (doctor) {
+            doctor.ratings = doctor.ratings || [];
+            const alreadyRated = doctor.ratings.some(r => r.appointment && r.appointment.toString() === appointment._id.toString());
+            if (!alreadyRated) {
+                doctor.ratings.push({
+                    user: req.user._id,
+                    appointment: appointment._id,
+                    rating,
+                    review,
+                    date: new Date()
+                });
+                await doctor.save();
+            }
+        }
+        res.json({ message: 'Doctor rated for this appointment', appointment });
+    } catch (error) {
+        res.status(500).json({ message: 'Server error', error: error.message });
+    }
+};
+
 module.exports = {
     createAppointment,
     getAppointments,
@@ -319,5 +369,6 @@ module.exports = {
     updateAppointmentStatus,
     cancelAppointment,
     rateAppointment,
-    getDoctorSchedule
+    getDoctorSchedule,
+    rateDoctorForAppointment
 };

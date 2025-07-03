@@ -111,6 +111,16 @@ const appointmentSchema = new mongoose.Schema({
     reviewDate: {
         type: Date,
         default: null
+    },
+    doctorRating: {
+        type: Number,
+        min: 1,
+        max: 5,
+        default: null
+    },
+    doctorReview: {
+        type: String,
+        default: null
     }
 }, {
     timestamps: true

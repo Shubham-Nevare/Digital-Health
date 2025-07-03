@@ -120,7 +120,7 @@ const AdminDashboard = () => {
       const faqsData = await faqsRes.json();
       setFaqs(faqsData.faqs || []);
       setTotalFaqs(faqsData.total || 0);
-      console.log(faqsData);
+      // console.log(faqsData);
     } catch (error) {
       console.error("Error fetching data:", error);
     } finally {

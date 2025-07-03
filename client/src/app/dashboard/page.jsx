@@ -5,9 +5,11 @@ import Link from "next/link";
 import Cookies from "js-cookie";
 import { medicalRecords } from "@/data/medicalRecords";
 // import { paymentHistory } from "@/data/paymentHistory";
-import { FiCalendar, FiDownload, FiFileText } from "react-icons/fi";
+import { FiCalendar, FiDownload, FiFileText, FiStar } from "react-icons/fi";
 import { useRouter } from "next/navigation";
 // import { upcomingAppointments } from '@/data/upcomingAppointments';
+import { Toaster, toast } from 'react-hot-toast';
+
 
 export default function Dashboard() {
   const [activeTab, setActiveTab] = useState("upcoming");
@@ -23,6 +25,72 @@ export default function Dashboard() {
   const [shareEmail, setShareEmail] = useState("");
   const [shareMessage, setShareMessage] = useState("");
   const router = useRouter();
+
+  const [ratings, setRatings] = useState({});
+  const [reviews, setReviews] = useState({});
+  const [submitting, setSubmitting] = useState({});
+  const [userDoctorRatings, setUserDoctorRatings] = useState({});
+  const [userAppointmentRatings, setUserAppointmentRatings] = useState({});
+  const [submittingBoth, setSubmittingBoth] = useState({});
+  const [appointmentRatings, setAppointmentRatings] = useState({});
+  const [doctorRatings, setDoctorRatings] = useState({});
+  const [successMessages, setSuccessMessages] = useState({});
+  const [errorMessages, setErrorMessages] = useState({});
+
+  // Move fetchAppointments to top-level
+  const fetchAppointments = async (filter) => {
+    setIsLoading(true);
+    setError(null);
+    const token = Cookies.get("token");
+
+    if (!token) {
+      setError("You must be logged in to view appointments.");
+      setIsLoading(false);
+      return;
+    }
+
+    try {
+      const query = new URLSearchParams(filter).toString();
+      const res = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/appointments?${query}`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      if (!res.ok) {
+        throw new Error(`Failed to fetch appointments`);
+      }
+
+      const data = await res.json();
+
+      if (filter.status) {
+        if (filter.status.includes("pending")) {
+          setUpcomingAppointments(data.appointments);
+        } else {
+          setPastAppointments(data.appointments);
+        }
+      } else if (filter.paymentStatus) {
+        setPaymentHistory(data.appointments);
+      }
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    if (activeTab === "upcoming") {
+      fetchAppointments({ status: "pending,confirmed" });
+    } else if (activeTab === "past") {
+      fetchAppointments({ status: "completed,cancelled,no-show,rejected" });
+    } else if (activeTab === "payments") {
+      fetchAppointments({ paymentStatus: "paid" });
+    }
+  }, [activeTab]);
 
   const handleCancel = async (appointmentId) => {
     if (!confirm("Are you sure you want to cancel this appointment?")) {
@@ -63,59 +131,9 @@ export default function Dashboard() {
     }
   };
 
-  useEffect(() => {
-    const fetchAppointments = async (filter) => {
-      setIsLoading(true);
-      setError(null);
-      const token = Cookies.get("token");
-
-      if (!token) {
-        setError("You must be logged in to view appointments.");
-        setIsLoading(false);
-        return;
-      }
-
-      try {
-        const query = new URLSearchParams(filter).toString();
-        const res = await fetch(
-          `${process.env.NEXT_PUBLIC_API_URL}/appointments?${query}`,
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          }
-        );
-
-        if (!res.ok) {
-          throw new Error(`Failed to fetch appointments`);
-        }
-
-        const data = await res.json();
-
-        if (filter.status) {
-          if (filter.status.includes("pending")) {
-            setUpcomingAppointments(data.appointments);
-          } else {
-            setPastAppointments(data.appointments);
-          }
-        } else if (filter.paymentStatus) {
-          setPaymentHistory(data.appointments);
-        }
-      } catch (err) {
-        setError(err.message);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    if (activeTab === "upcoming") {
-      fetchAppointments({ status: "pending,confirmed" });
-    } else if (activeTab === "past") {
-      fetchAppointments({ status: "completed,cancelled,no-show,rejected" });
-    } else if (activeTab === "payments") {
-      fetchAppointments({ paymentStatus: "paid" });
-    }
-  }, [activeTab]);
+  const handleReviewChange = (id, text) => {
+    setReviews((prev) => ({ ...prev, [id]: text }));
+  };
 
   const renderUpcomingAppointments = () => {
     if (isLoading && activeTab === "upcoming")
@@ -131,16 +149,18 @@ export default function Dashboard() {
         <div className="text-center py-8">
           <div className="mx-auto max-w-md">
             <FiCalendar className="mx-auto h-12 w-12 text-gray-500 mb-4" />
-            <h3 className="text-lg font-medium text-gray-300">No upcoming consultations</h3>
+            <h3 className="text-lg font-medium text-gray-300">
+              No upcoming consultations
+            </h3>
             <p className="mt-2 text-gray-500">
-            You have no upcoming appointments Book one to get started.
+              You have no upcoming appointments Book one to get started.
             </p>
             <button
               onClick={() => router.push("/find-doctor")}
               className="mt-4 bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg"
             >
               Book Consultation
-            </button> 
+            </button>
           </div>
         </div>
       );
@@ -389,6 +409,78 @@ export default function Dashboard() {
   };
 
   const renderPastConsultations = () => {
+   
+    const handleAppointmentRatingChange = (appointmentId, value) => {
+      setAppointmentRatings((prev) => ({ ...prev, [appointmentId]: value }));
+    };
+  
+    const handleDoctorRatingChange = (doctorId, value) => {
+      setDoctorRatings((prev) => ({ ...prev, [doctorId]: value }));
+    };
+  
+    const submitBothFeedback = async (consultationId, doctorId) => {
+      setSubmittingBoth((prev) => ({ ...prev, [consultationId]: true }));
+      try {
+        const token = Cookies.get("token");
+        const userId = Cookies.get('userId');
+        const appointmentRating = appointmentRatings[consultationId];
+        const appointmentReview = reviews[consultationId] || "";
+        const doctorRating = doctorRatings[doctorId];
+        const doctorReview = reviews[doctorId] || "";
+        console.log('APPT:', { rating: appointmentRating, review: appointmentReview });
+        console.log('DOC:', { rating: doctorRating, review: doctorReview });
+        const [appointmentRes, doctorRes] = await Promise.all([
+          fetch(`${process.env.NEXT_PUBLIC_API_URL}/appointments/${consultationId}/rate`, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${token}`,
+            },
+            body: JSON.stringify({ rating: appointmentRating, review: appointmentReview }),
+          }),
+          fetch(`${process.env.NEXT_PUBLIC_API_URL}/appointments/${consultationId}/doctor-rate`, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${token}`,
+            },
+            body: JSON.stringify({ rating: doctorRating, review: doctorReview }),
+          })
+        ]);
+        const appointmentData = await appointmentRes.json();
+        const doctorData = await doctorRes.json();
+        if (!appointmentRes.ok) throw new Error(appointmentData.message || "Failed to submit appointment feedback");
+        if (!doctorRes.ok) throw new Error(doctorData.message || "Failed to submit doctor feedback");
+        toast.success("Feedback submitted successfully!");
+        setUserAppointmentRatings(prev => ({
+          ...prev,
+          [consultationId]: {
+            rating: appointmentRating,
+            review: appointmentReview
+          }
+        }));
+        setUserDoctorRatings(prev => ({
+          ...prev,
+          [doctorId]: {
+            rating: doctorRating,
+            review: doctorReview
+          }
+        }));
+        setSuccessMessages(prev => ({ ...prev, [consultationId]: true }));
+        setErrorMessages(prev => ({ ...prev, [consultationId]: null }));
+        setTimeout(() => {
+          setSuccessMessages(prev => ({ ...prev, [consultationId]: false }));
+        }, 4000);
+        setIsLoading(true);
+        fetchAppointments();
+      } catch (error) {
+        toast.error(error.message || "Failed to submit feedback");
+        setErrorMessages(prev => ({ ...prev, [consultationId]: error.message || "Failed to submit feedback" }));
+      } finally {
+        setSubmittingBoth((prev) => ({ ...prev, [consultationId]: false }));
+      }
+    };
+  
     if (isLoading && activeTab === "past") {
       return (
         <div className="flex justify-center items-center py-12">
@@ -397,26 +489,28 @@ export default function Dashboard() {
       );
     }
   
-    if (error) {
-      return (
-        <div className="bg-red-900/30 border border-red-700 rounded-lg p-4 text-center">
-          <p className="text-red-400">Error loading consultations: {error}</p>
-          <button 
-            onClick={fetchAppointments}
-            className="mt-2 text-sm bg-red-800 hover:bg-red-700 text-white px-4 py-2 rounded-lg"
-          >
-            Retry
-          </button>
-        </div>
-      );
-    }
+    // if (error) {
+    //   return (
+    //     <div className="bg-red-900/30 border border-red-700 rounded-lg p-4 text-center">
+    //       <p className="text-red-400">Error loading consultations: {error}</p>
+    //       <button
+    //         onClick={fetchAppointments}
+    //         className="mt-2 text-sm bg-red-800 hover:bg-red-700 text-white px-4 py-2 rounded-lg"
+    //       >
+    //         Retry
+    //       </button>
+    //     </div>
+    //   );
+    // }
   
     if (pastAppointments.length === 0) {
       return (
         <div className="text-center py-8">
           <div className="mx-auto max-w-md">
             <FiCalendar className="mx-auto h-12 w-12 text-gray-500 mb-4" />
-            <h3 className="text-lg font-medium text-gray-300">No past consultations</h3>
+            <h3 className="text-lg font-medium text-gray-300">
+              No past consultations
+            </h3>
             <p className="mt-2 text-gray-500">
               You haven't had any consultations yet. Book one to get started.
             </p>
@@ -425,7 +519,7 @@ export default function Dashboard() {
               className="mt-4 bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg"
             >
               Book Consultation
-            </button> 
+            </button>
           </div>
         </div>
       );
@@ -455,17 +549,21 @@ export default function Dashboard() {
                     <h3 className="text-base md:text-lg font-semibold text-blue-400">
                       Dr. {consultation.doctor.name}
                     </h3>
-                    <span className="hidden md:inline-block text-gray-500">•</span>
+                    <span className="hidden md:inline-block text-gray-500">
+                      •
+                    </span>
                     <span className="text-sm md:text-base text-gray-400">
                       {consultation.doctor.specialty}
                     </span>
                   </div>
                   <div className="mt-1 flex flex-col sm:flex-row sm:items-center sm:gap-4 text-sm text-gray-500">
                     <span>
-                      {new Date(consultation.appointmentDate).toLocaleDateString('en-US', {
-                        year: 'numeric',
-                        month: 'short',
-                        day: 'numeric'
+                      {new Date(
+                        consultation.appointmentDate
+                      ).toLocaleDateString("en-US", {
+                        year: "numeric",
+                        month: "short",
+                        day: "numeric",
                       })}
                     </span>
                     <span className="hidden sm:inline">•</span>
@@ -485,36 +583,218 @@ export default function Dashboard() {
             <div className="mt-4 md:mt-6">
               {consultation.symptoms && (
                 <div className="mb-3">
-                  <h4 className="text-sm font-medium text-gray-400 mb-1">Notes</h4>
+                  <h4 className="text-sm font-medium text-gray-400 mb-1">
+                    Notes
+                  </h4>
                   <p className="text-gray-300 text-sm md:text-base leading-relaxed line-clamp-2">
                     {consultation.symptoms}
                   </p>
                 </div>
               )}
   
+              {/* Rating Section for Completed Consultations */}
+              {consultation.status === "completed" && (
+                <div className="mb-4 p-4 bg-gray-900/50 rounded-lg">
+                  <div className="flex flex-col md:flex-row gap-6">
+                    {/* Appointment Feedback */}
+                    <div className="flex-1">
+                      <h4 className="text-sm font-medium text-gray-400 mb-2">
+                        Appointment Feedback
+                      </h4>
+                      {consultation.rating ? (
+                        <div>
+                          <div className="flex items-center gap-1 mb-2">
+                            {[1,2,3,4,5].map(star => (
+                              <span key={star} className={consultation.rating >= star ? "text-yellow-400" : "text-gray-500"}>★</span>
+                            ))}
+                          </div>
+                          <div className="text-gray-300">{consultation.review}</div>
+                        </div>
+                      ) : (
+                        <>
+                          {/* Star Rating */}
+                          <div className="flex items-center gap-1 mb-3">
+                            {[1, 2, 3, 4, 5].map((star) => (
+                              <button
+                                key={star}
+                                onClick={() => handleAppointmentRatingChange(consultation._id, star)}
+                                className="text-2xl focus:outline-none"
+                                type="button"
+                              >
+                                <FiStar
+                                  className={`
+                                    ${
+                                      appointmentRatings[consultation._id] >= star
+                                        ? "text-yellow-400 fill-yellow-400"
+                                        : "text-gray-500"
+                                    }
+                                    transition-colors duration-200
+                                  `}
+                                />
+                              </button>
+                            ))}
+                          </div>
+
+                          {/* Review Textarea */}
+                          <textarea
+                            placeholder="Share your experience (optional)"
+                            value={reviews[consultation._id] || ""}
+                            onChange={(e) => handleReviewChange(consultation._id, e.target.value)}
+                            className="w-full bg-gray-800 border border-gray-700 rounded-md p-2 text-sm text-gray-300 focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
+                            rows="3"
+                          />
+                        </>
+                      )}
+                    </div>
+
+                    {/* Doctor Feedback */}
+                    <div className="flex-1">
+                      <h4 className="text-sm font-medium text-gray-400 mb-2">
+                        Doctor Feedback
+                      </h4>
+                      {consultation.doctorRating ? (
+                        <div>
+                          <div className="flex items-center gap-1 mb-2">
+                            {[1,2,3,4,5].map(star => (
+                              <span key={star} className={consultation.doctorRating >= star ? "text-yellow-400" : "text-gray-500"}>★</span>
+                            ))}
+                          </div>
+                          <div className="text-gray-300">{consultation.doctorReview}</div>
+                        </div>
+                      ) : (
+                        <>
+                          {/* Star Rating */}
+                          <div className="flex items-center gap-1 mb-3">
+                            {[1, 2, 3, 4, 5].map((star) => (
+                              <button
+                                key={star}
+                                onClick={() => handleDoctorRatingChange(consultation.doctor._id, star)}
+                                className="text-2xl focus:outline-none"
+                                type="button"
+                              >
+                                <FiStar
+                                  className={`
+                                    ${
+                                      doctorRatings[consultation.doctor._id] >= star
+                                        ? "text-yellow-400 fill-yellow-400"
+                                        : "text-gray-500"
+                                    }
+                                    transition-colors duration-200
+                                  `}
+                                />
+                              </button>
+                            ))}
+                          </div>
+
+                          {/* Review Textarea */}
+                          <textarea
+                            placeholder="Share your experience (optional)"
+                            value={reviews[consultation.doctor._id] || ""}
+                            onChange={(e) => handleReviewChange(consultation.doctor._id, e.target.value)}
+                            className="w-full bg-gray-800 border border-gray-700 rounded-md p-2 text-sm text-gray-300 focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
+                            rows="3"
+                          />
+                        </>
+                      )}
+                    </div>
+                  </div>
+                  {/* Single Submit Button for Both */}
+                  {!(consultation.rating || consultation.doctorRating) &&
+                    !(userAppointmentRatings[consultation._id] && userDoctorRatings[consultation.doctor._id]) && (
+                    <>
+                      {/* Warning if either rating is missing */}
+                      {(!appointmentRatings[consultation._id] || !doctorRatings[consultation.doctor._id]) && (
+                        <div className="text-red-400 mb-2 text-sm">
+                          Please select a rating for both appointment and doctor to enable submit.
+                        </div>
+                      )}
+                      <button
+                        onClick={() => submitBothFeedback(consultation._id, consultation.doctor._id)}
+                        disabled={
+                          !appointmentRatings[consultation._id] || !doctorRatings[consultation.doctor._id] || submittingBoth[consultation._id]
+                        }
+                        className={`mt-6 px-6 py-2 rounded-md text-sm font-medium w-full md:w-auto ${
+                          appointmentRatings[consultation._id] && doctorRatings[consultation.doctor._id]
+                            ? "bg-blue-600 hover:bg-blue-700 text-white"
+                            : "bg-gray-700 text-gray-400 cursor-not-allowed"
+                        } transition-colors`}
+                      >
+                        {submittingBoth[consultation._id] ? "Submitting..." : "Submit Feedback"}
+                      </button>
+                      {successMessages[consultation._id] && (
+                        <div className="mt-3 text-green-400 text-sm font-medium">
+                          Feedback submitted successfully!
+                        </div>
+                      )}
+                      {errorMessages[consultation._id] && (
+                        <div className="mt-3 text-red-400 text-sm font-medium">
+                          {errorMessages[consultation._id]}
+                        </div>
+                      )}
+                    </>
+                  )}
+                </div>
+              )}
+  
+              {/* Show thank you message if already rated */}
+              {consultation.status === "completed" && consultation.isRated && (
+                <div className="mb-4 p-4 bg-green-900/20 rounded-lg border border-green-800/50">
+                  <p className="text-green-400 flex items-center gap-2">
+                    <FiCheckCircle className="text-lg" />
+                    Thank you for your feedback!
+                  </p>
+                </div>
+              )}
+  
               <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
                 <div className="flex items-center gap-2 flex-wrap">
-                  <span className={`
-                    inline-flex items-center px-3 py-1 rounded-full text-xs md:text-sm font-medium
-                    ${consultation.status === 'completed' ? 'bg-green-900/30 text-green-400 border border-green-800' : ''}
-                    ${consultation.status === 'confirmed' ? 'bg-blue-900/30 text-blue-300 border border-blue-800' : ''}
-                    ${consultation.status === 'cancelled' ? 'bg-yellow-900/30 text-yellow-300 border border-yellow-800' : ''}
-                    ${consultation.status === 'rejected' ? 'bg-red-900/30 text-red-300 border border-red-800' : ''}
-                    ${consultation.status === 'no-show' ? 'bg-gray-700 text-gray-400 border border-gray-600' : ''}
-                  `}>
+                  <span
+                    className={`
+                      inline-flex items-center px-3 py-1 rounded-full text-xs md:text-sm font-medium
+                      ${
+                        consultation.status === "completed"
+                          ? "bg-green-900/30 text-green-400 border border-green-800"
+                          : ""
+                      }
+                      ${
+                        consultation.status === "confirmed"
+                          ? "bg-blue-900/30 text-blue-300 border border-blue-800"
+                          : ""
+                      }
+                      ${
+                        consultation.status === "cancelled"
+                          ? "bg-yellow-900/30 text-yellow-300 border border-yellow-800"
+                          : ""
+                      }
+                      ${
+                        consultation.status === "rejected"
+                          ? "bg-red-900/30 text-red-300 border border-red-800"
+                          : ""
+                      }
+                      ${
+                        consultation.status === "no-show"
+                          ? "bg-gray-700 text-gray-400 border border-gray-600"
+                          : ""
+                      }
+                    `}
+                  >
                     {consultation.status}
                   </span>
-                  
-                  {(consultation.status === 'cancelled' && consultation.cancellationReason) && (
-                    <span className="text-xs text-yellow-300 bg-yellow-900/20 px-2 py-1 rounded">
-                      Reason: {consultation.cancellationReason}
+  
+                  {consultation.status === "cancelled" &&
+                    consultation.cancellationReason && (
+                      <span className="text-xs text-yellow-300 bg-yellow-900/20 px-2 py-1 rounded">
+                        Reason: {consultation.cancellationReason}
+                      </span>
+                    )}
+                  {consultation.status === "rejected" && (
+                    <span className="text-xs text-red-300 bg-red-900/20 px-2 py-1 rounded">
+                      Reason:{" "}
+                      {consultation.rejectionReason
+                        ? consultation.rejectionReason
+                        : "No reason provided"}
                     </span>
                   )}
-                  {(consultation.status === 'rejected' && (
-                    <span className="text-xs text-red-300 bg-red-900/20 px-2 py-1 rounded">
-                      Reason: {consultation.rejectionReason ? consultation.rejectionReason : 'No reason provided'}
-                    </span>
-                  ))}
                 </div>
   
                 <div className="flex gap-3 justify-end">

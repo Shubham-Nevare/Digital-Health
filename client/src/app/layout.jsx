@@ -44,7 +44,8 @@ export default function RootLayout({ children }) {
       <body className={`${inter.className} bg-gray-900 text-white min-h-screen flex flex-col`}>
         <Navbar />
         <SessionTimer />
-        <main className="flex-grow">
+
+        <main className="flex-grow pt-15">
           {children}
         </main>
         <Footer />

@@ -133,7 +133,7 @@ export default function FindDoctor() {
                     className="w-full h-full object-cover"
                   />
                   <div className="absolute top-4 right-4 bg-blue-600 text-white px-3 py-1 rounded-full text-sm">
-                    {doctor.rating} ★ ({doctor.reviews})
+                    {doctor.rating?.toFixed(1)} ★ ({doctor.reviews})
                   </div>
                 </div>
                 <div className="p-6">
