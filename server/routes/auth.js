@@ -11,7 +11,8 @@ const {
     getDoctorById,
     addAdmin,
     getPatients,
-    getAllUsers
+    getAllUsers,
+    getPatientById
 } = require('../controllers/authController');
 const { protect } = require('../middleware/auth');
 const { check } = require('express-validator');
@@ -93,7 +94,7 @@ router.get('/doctors', getDoctors);
 router.get('/doctors/:id', getDoctorById);
 router.get('/patients', getPatients);
 router.get('/all-users', protect, getAllUsers);
-
+router.get('/patients/:id', getPatientById);
 // Admin route to add another admin
 router.post('/add-admin', protect, (req, res, next) => {
     if (req.user.role !== 'admin') {

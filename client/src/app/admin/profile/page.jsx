@@ -143,7 +143,7 @@ const AdminProfile = () => {
               Back to Dashboard
             </Link>
 
-            <button
+            {/* <button
               onClick={() => {
                 localStorage.removeItem("user");
                 localStorage.removeItem("token");
@@ -152,7 +152,7 @@ const AdminProfile = () => {
               className="bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded-lg flex items-center gap-2 transition-colors w-full md:w-auto justify-center"
             >
               <FiLogOut /> Logout
-            </button>
+            </button> */}
           </nav>
         </div>
       </header>

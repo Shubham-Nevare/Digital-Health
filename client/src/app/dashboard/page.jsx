@@ -6,6 +6,7 @@ import Cookies from "js-cookie";
 import { medicalRecords } from "@/data/medicalRecords";
 // import { paymentHistory } from "@/data/paymentHistory";
 import { FiCalendar, FiDownload, FiFileText } from "react-icons/fi";
+import { useRouter } from "next/navigation";
 // import { upcomingAppointments } from '@/data/upcomingAppointments';
 
 export default function Dashboard() {
@@ -21,6 +22,7 @@ export default function Dashboard() {
   const [showShareModal, setShowShareModal] = useState(false);
   const [shareEmail, setShareEmail] = useState("");
   const [shareMessage, setShareMessage] = useState("");
+  const router = useRouter();
 
   const handleCancel = async (appointmentId) => {
     if (!confirm("Are you sure you want to cancel this appointment?")) {
@@ -119,9 +121,28 @@ export default function Dashboard() {
     if (isLoading && activeTab === "upcoming")
       return <p className="text-gray-400">Loading appointments...</p>;
     if (error) return <p className="text-red-400">{error}</p>;
-    if (upcomingAppointments.length === 0) {
+    // if (upcomingAppointments.length === 0) {
+    //   return (
+    //     <p className="text-gray-400">You have no upcoming appointments.</p>
+    //   );
+    // }
+    if (pastAppointments.length === 0) {
       return (
-        <p className="text-gray-400">You have no upcoming appointments.</p>
+        <div className="text-center py-8">
+          <div className="mx-auto max-w-md">
+            <FiCalendar className="mx-auto h-12 w-12 text-gray-500 mb-4" />
+            <h3 className="text-lg font-medium text-gray-300">No upcoming consultations</h3>
+            <p className="mt-2 text-gray-500">
+            You have no upcoming appointments Book one to get started.
+            </p>
+            <button
+              onClick={() => router.push("/find-doctor")}
+              className="mt-4 bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg"
+            >
+              Book Consultation
+            </button> 
+          </div>
+        </div>
       );
     }
 
@@ -400,11 +421,11 @@ export default function Dashboard() {
               You haven't had any consultations yet. Book one to get started.
             </p>
             <button
-              onClick={() => setActiveTab("book")}
+              onClick={() => router.push("/find-doctor")}
               className="mt-4 bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg"
             >
               Book Consultation
-            </button>
+            </button> 
           </div>
         </div>
       );

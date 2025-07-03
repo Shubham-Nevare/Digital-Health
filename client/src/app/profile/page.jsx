@@ -134,7 +134,7 @@ export default function Profile() {
         router.push('/login');
         return;
       }
-      const response = await fetch(`${API_URL}/auth/profile/image`, {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/auth/profile/image`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`,

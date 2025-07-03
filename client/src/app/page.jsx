@@ -1,10 +1,12 @@
-"use client"
+"use client";
 import Link from "next/link";
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { gsap } from "gsap";
 
 export default function Home() {
   const headingRef = useRef(null);
+  const [faqs, setFaqs] = useState([]);
+  const [activeIndex, setActiveIndex] = useState(null);
 
   useEffect(() => {
     if (headingRef.current) {
@@ -14,20 +16,33 @@ export default function Home() {
         { y: 0, opacity: 1, duration: 1, ease: "power3.out" }
       );
     }
+    const fetchFaqs = async () => {
+      try {
+        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/faqs`);
+        const data = await res.json();
+        setFaqs(data.faqs || []);
+      } catch (err) {
+        setFaqs([]);
+      }
+    };
+    fetchFaqs();
   }, []);
+
+  const toggleFAQ = (index) => {
+    setActiveIndex(index === activeIndex ? null : index);
+  };
 
   return (
     <main className="min-h-screen bg-gray-900 text-white">
       {/* Hero Section */}
-      {/* Hero Section - Optimized for 1280px */}
       <section className="bg-gradient-to-br from-blue-900 via-blue-700 to-blue-500 text-white relative overflow-hidden">
-        {/* Decorative elements (more subtle) */}
+        {/* Decorative elements */}
         <div className="absolute top-0 left-0 w-full h-full opacity-10">
           <div className="absolute top-1/4 left-1/4 w-32 h-32 rounded-full bg-blue-400 blur-lg"></div>
           <div className="absolute bottom-1/4 right-1/4 w-48 h-48 rounded-full bg-blue-500 blur-lg"></div>
         </div>
 
-        <div className="container mx-auto px-15 py-16 md:py-20">
+        <div className="container mx-auto px-4 py-16 md:py-20">
           <div className="flex flex-col lg:flex-row items-center gap-6 lg:gap-8">
             {/* Content */}
             <div className="lg:w-1/2 z-10 text-center lg:text-left">
@@ -35,8 +50,7 @@ export default function Home() {
                 ref={headingRef}
                 className="text-3xl sm:text-4xl md:text-5xl font-bold mb-4 leading-snug"
               >
-                Get Expert <span className="text-blue-300">Medical</span> Second
-                Opinions
+                Get Expert <span className="text-blue-300">Medical</span> Second Opinions
               </h1>
               <p className="text-base sm:text-lg md:text-xl mb-6 text-blue-100 max-w-lg mx-auto lg:mx-0">
                 Connect with top specialists for comprehensive medical advice
@@ -76,7 +90,7 @@ export default function Home() {
                 </Link>
               </div>
 
-              {/* Compact trust indicators */}
+              {/* Trust indicators */}
               <div className="mt-8 flex flex-wrap justify-center lg:justify-start items-center gap-4 text-xs sm:text-sm">
                 <div className="flex items-center gap-2">
                   <div className="flex -space-x-1">
@@ -106,7 +120,7 @@ export default function Home() {
               </div>
             </div>
 
-            {/* Image - Slightly smaller */}
+            {/* Image */}
             <div className="lg:w-1/2 z-10 mt-8 lg:mt-0">
               <div className="relative w-full h-[250px] sm:h-[320px] rounded-xl overflow-hidden shadow-lg border-2 border-blue-300/20">
                 <img
@@ -115,7 +129,6 @@ export default function Home() {
                   className="w-full h-full object-cover"
                   loading="lazy"
                 />
-                {/* Smaller floating badge */}
                 <div className="absolute -bottom-2 -right-2 bg-white text-blue-900 px-4 py-1.5 text-xs sm:text-sm rounded-full shadow-md font-bold flex items-center gap-1">
                   <svg
                     className="h-3 w-3 sm:h-4 sm:w-4"
@@ -138,7 +151,7 @@ export default function Home() {
 
       {/* Features Section */}
       <section className="py-20 bg-gray-950">
-        <div className="container mx-auto px-6">
+        <div className="max-w-4xl mx-auto px-4">
           <h2 className="text-3xl font-bold text-center mb-12 text-blue-400">
             Why Choose HealthConnectDoctor?
           </h2>
@@ -212,6 +225,191 @@ export default function Home() {
               <p className="text-gray-400">Receive expert medical advice</p>
             </div>
           </div>
+        </div>
+      </section>
+
+      {/* Specialties Section */}
+      <section className="py-20 bg-gray-950">
+        <div className="container mx-auto px-6">
+          <h2 className="text-3xl font-bold text-center mb-12 text-blue-400">
+            Our Medical Specialties
+          </h2>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            {[
+              { name: "Cardiology", icon: "❤️" },
+              { name: "Neurology", icon: "🧠" },
+              { name: "Oncology", icon: "🦠" },
+              { name: "Pediatrics", icon: "👶" },
+              { name: "Dermatology", icon: "🧴" },
+              { name: "Psychiatry", icon: "🧠" },
+              { name: "Orthopedics", icon: "🦴" },
+              { name: "Endocrinology", icon: "⚖️" },
+            ].map((specialty, index) => (
+              <div
+                key={index}
+                className="bg-gray-900 p-4 rounded-lg text-center hover:bg-blue-900/30 transition-colors"
+              >
+                <div className="text-3xl mb-2">{specialty.icon}</div>
+                <h3 className="font-medium">{specialty.name}</h3>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Testimonials Section */}
+      <section className="py-20 bg-gray-900">
+        <div className="container mx-auto px-6">
+          <h2 className="text-3xl font-bold text-center mb-12 text-blue-400">
+            What Our Patients Say
+          </h2>
+          <div className="grid md:grid-cols-3 gap-8">
+            <div className="bg-gray-800 p-6 rounded-lg shadow-md">
+              <div className="flex items-center mb-4">
+                <img
+                  src="https://randomuser.me/api/portraits/women/32.jpg"
+                  alt="Patient"
+                  className="w-12 h-12 rounded-full mr-4"
+                />
+                <div>
+                  <h4 className="font-semibold">Sarah Johnson</h4>
+                  <div className="flex text-yellow-400">
+                    {[...Array(5)].map((_, i) => (
+                      <svg
+                        key={i}
+                        className="w-4 h-4"
+                        viewBox="0 0 20 20"
+                        fill="currentColor"
+                      >
+                        <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                      </svg>
+                    ))}
+                  </div>
+                </div>
+              </div>
+              <p className="text-gray-400 italic">
+                "The second opinion I received gave me peace of mind about my
+                treatment options. The doctor was incredibly thorough."
+              </p>
+            </div>
+            <div className="bg-gray-800 p-6 rounded-lg shadow-md">
+              <div className="flex items-center mb-4">
+                <img
+                  src="https://randomuser.me/api/portraits/men/45.jpg"
+                  alt="Patient"
+                  className="w-12 h-12 rounded-full mr-4"
+                />
+                <div>
+                  <h4 className="font-semibold">Michael Chen</h4>
+                  <div className="flex text-yellow-400">
+                    {[...Array(5)].map((_, i) => (
+                      <svg
+                        key={i}
+                        className="w-4 h-4"
+                        viewBox="0 0 20 20"
+                        fill="currentColor"
+                      >
+                        <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                      </svg>
+                    ))}
+                  </div>
+                </div>
+              </div>
+              <p className="text-gray-400 italic">
+                "Saved me hours of waiting at the clinic. The video consultation
+                was just as effective as an in-person visit."
+              </p>
+            </div>
+            <div className="bg-gray-800 p-6 rounded-lg shadow-md">
+              <div className="flex items-center mb-4">
+                <img
+                  src="https://randomuser.me/api/portraits/women/68.jpg"
+                  alt="Patient"
+                  className="w-12 h-12 rounded-full mr-4"
+                />
+                <div>
+                  <h4 className="font-semibold">Emily Rodriguez</h4>
+                  <div className="flex text-yellow-400">
+                    {[...Array(5)].map((_, i) => (
+                      <svg
+                        key={i}
+                        className="w-4 h-4"
+                        viewBox="0 0 20 20"
+                        fill="currentColor"
+                      >
+                        <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                      </svg>
+                    ))}
+                  </div>
+                </div>
+              </div>
+              <p className="text-gray-400 italic">
+                "The specialist provided a different perspective that my local
+                doctor hadn't considered. Very valuable service!"
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* FAQ Section */}
+      <section className="py-20 bg-gray-950">
+      <div className="container mx-auto px-6 max-w-4xl">
+        <h2 className="text-3xl font-bold text-center mb-12 text-blue-400">
+          Frequently Asked Questions
+        </h2>
+        <div className="space-y-4">
+          {faqs.map((faq, index) => (
+            <div
+              key={index}
+              className="bg-gray-800 rounded-lg overflow-hidden"
+            >
+              <button
+                onClick={() => toggleFAQ(index)}
+                className="w-full p-4 text-left flex justify-between items-center hover:bg-gray-700 transition-colors"
+              >
+                <span className="font-medium">{faq.question}</span>
+                <svg
+                  className={`w-5 h-5 text-blue-400 transform transition-transform ${
+                    activeIndex === index ? "rotate-180" : ""
+                  }`}
+                  viewBox="0 0 20 20"
+                  fill="currentColor"
+                >
+                  <path
+                    fillRule="evenodd"
+                    d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"
+                    clipRule="evenodd"
+                  />
+                </svg>
+              </button>
+              {activeIndex === index && (
+                <div className="px-4 pb-4 pt-2 text-gray-400">
+                  {faq.answer}
+                </div>
+              )}
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
+
+      {/* Final CTA Section */}
+      <section className="py-16 bg-gradient-to-r from-blue-900 to-blue-700">
+        <div className="container mx-auto px-6 text-center">
+          <h2 className="text-3xl font-bold mb-6">
+            Ready for a Second Opinion?
+          </h2>
+          <p className="text-xl text-blue-200 mb-8 max-w-2xl mx-auto">
+            Connect with a specialist today and take control of your health
+            journey.
+          </p>
+          <Link
+            href="/find-doctor"
+            className="bg-white text-blue-900 hover:bg-blue-100 px-8 py-3 rounded-full font-bold text-lg inline-block transition-colors shadow-lg hover:shadow-xl"
+          >
+            Find Your Doctor Now
+          </Link>
         </div>
       </section>
     </main>

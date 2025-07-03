@@ -18,8 +18,11 @@ import {
   FiDownload,
   FiFilter,
   FiChevronDown,
+  FiEye,
+  FiHelpCircle,
 } from "react-icons/fi";
 import { saveAs } from "file-saver";
+import FAQAdmin from "./components/FAQAdmin";
 
 const AdminDashboard = () => {
   const router = useRouter();
@@ -34,6 +37,8 @@ const AdminDashboard = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [appointments, setAppointments] = useState([]);
 
+  const [faqs, setFaqs] = useState([]);
+  const [totalFaqs, setTotalFaqs] = useState(0);
   // Appointment filters
   const [appointmentFilters, setAppointmentFilters] = useState({
     sortBy: "newest", // newest, oldest, date
@@ -104,6 +109,18 @@ const AdminDashboard = () => {
       const apptData = await apptRes.json();
       setAppointments(apptData.appointments || []);
       setTotalAppointments(apptData.total || 0);
+
+      // Fetch FAQs
+      const faqsRes = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/faqs`,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+      const faqsData = await faqsRes.json();
+      setFaqs(faqsData.faqs || []);
+      setTotalFaqs(faqsData.total || 0);
+      console.log(faqsData);
     } catch (error) {
       console.error("Error fetching data:", error);
     } finally {
@@ -342,6 +359,14 @@ const AdminDashboard = () => {
       patient.email.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
+  const handleViewUser = (type, id) => {
+    if (type === "doctors") {
+      router.push(`/doctor/${id}`);
+    } else if (type === "patients") {
+      router.push(`/profile/${id}`);
+    }
+  };
+
   if (!user) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-900 text-white">
@@ -401,13 +426,21 @@ const AdminDashboard = () => {
             >
               Admins
             </button>
+            <button
+              onClick={() => setActiveTab("faq")}
+              className={`px-3 py-1 md:px-4 md:py-2 rounded-lg text-sm md:text-base ${
+                activeTab === "faq" ? "bg-blue-600" : "hover:bg-gray-700"
+              }`}
+            >
+              FAQ
+            </button>
             <Link
               href="/admin/profile"
               className="px-3 py-1 md:px-4 md:py-2 rounded-lg text-sm md:text-base hover:bg-gray-700"
             >
               Profile
             </Link>
-            <button
+            {/* <button
               onClick={() => {
                 localStorage.removeItem("user");
                 router.push("/login");
@@ -415,7 +448,7 @@ const AdminDashboard = () => {
               className="bg-red-600 hover:bg-red-700 text-white font-bold px-3 py-1 md:px-4 md:py-2 rounded-lg flex items-center gap-1 md:gap-2 text-sm md:text-base"
             >
               Logout
-            </button>
+            </button> */}
           </nav>
         </div>
       </header>
@@ -479,6 +512,15 @@ const AdminDashboard = () => {
               <p className="text-2xl md:text-3xl font-bold">
                 {totalAppointments}
               </p>
+            </div>
+
+            {/* Total FAQs */}
+            <div className="bg-gradient-to-br from-amber-900 to-amber-700 p-4 md:p-6 rounded-xl shadow-lg">
+              <h3 className="text-base md:text-lg font-semibold mb-2 flex items-center gap-2">
+                <FiHelpCircle className="text-sm md:text-base" /> Total FAQs
+              </h3>
+              <p className="text-2xl md:text-3xl font-bold">{totalFaqs}</p>
+             
             </div>
 
             {/* Add New */}
@@ -564,6 +606,14 @@ const AdminDashboard = () => {
                         <div className="flex justify-end gap-2">
                           <button
                             onClick={() =>
+                              handleViewUser("doctors", doctor._id)
+                            }
+                            className="text-green-400 hover:text-green-300"
+                          >
+                            <FiEye className="text-sm md:text-base" />
+                          </button>
+                          <button
+                            onClick={() =>
                               handleEditUser("doctors", doctor._id)
                             }
                             className="text-blue-400 hover:text-blue-300"
@@ -646,6 +696,14 @@ const AdminDashboard = () => {
                       </td>
                       <td className="px-4 py-2 md:px-6 md:py-4 text-right">
                         <div className="flex justify-end gap-2">
+                          <button
+                            onClick={() =>
+                              handleViewUser("patients", patient._id)
+                            }
+                            className="text-green-400 hover:text-green-300"
+                          >
+                            <FiEye className="text-sm md:text-base" />
+                          </button>
                           <button
                             onClick={() =>
                               handleEditUser("patients", patient._id)
@@ -800,7 +858,7 @@ const AdminDashboard = () => {
 
                 {/* Container for count & button */}
                 <div className="mt-4 flex justify-between items-center">
-                {/* Result count text */}
+                  {/* Result count text */}
                   <div className="text-sm text-gray-300">
                     Showing {filteredAppointments.length} of{" "}
                     {appointments.length} appointments
@@ -984,6 +1042,9 @@ const AdminDashboard = () => {
             {message && <p className="mt-4 text-center">{message}</p>}
           </div>
         )}
+
+        {/* FAQ Tab */}
+        {activeTab === "faq" && <FAQAdmin />}
       </main>
     </div>
   );

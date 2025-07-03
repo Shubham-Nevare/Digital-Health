@@ -211,7 +211,7 @@ export default function Login() {
               <div className="text-xs text-gray-400 space-y-1">
                 <div><strong>Patient:</strong> patient@gmail.com / user123</div>
                 <div><strong>Doctor:</strong> doctor@gmail.com / user123</div>
-                <div><strong>Admin:</strong> admin@admin.com / admin123</div>
+                {/* <div><strong>Admin:</strong> admin@admin.com / admin123</div> */}
               </div>
             </div>
           </div>

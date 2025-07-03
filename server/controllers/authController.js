@@ -399,6 +399,27 @@ const getPatients = async(req, res) => {
     }
 };
 
+// @desc    Get patient by ID
+// @route   GET /api/auth/patients/:id
+// @access  Private/Admin or Public (adjust as needed)
+const getPatientById = async(req, res) => {
+    try {
+        const patient = await User.findOne({
+            _id: req.params.id,
+            role: { $regex: /^patient$/i }
+        }).select('-password');
+
+        if (patient) {
+            res.json(patient);
+        } else {
+            res.status(404).json({ message: 'Patient not found' });
+        }
+    } catch (error) {
+        console.error('Get patient error:', error);
+        res.status(500).json({ message: 'Server error' });
+    }
+};
+
 // @desc    DEBUG: Get all users
 // @route   GET /api/auth/all-users
 // @access  Private/Admin
@@ -464,6 +485,7 @@ module.exports = {
     getDoctors,
     getDoctorById,
     getPatients,
+    getPatientById,
     addAdmin,
     getAllUsers
 };
